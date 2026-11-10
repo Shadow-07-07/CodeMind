@@ -22,8 +22,8 @@ allow_all_origins = "*" in origins or not origins
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if allow_all_origins else origins,
-    allow_credentials=not allow_all_origins,
+    allow_origins=["https://code-mind-eosin.vercel.app"] if allow_all_origins else origins,
+    allow_credentials = True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
