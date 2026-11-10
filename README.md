@@ -11,15 +11,7 @@ CodeMind is a modern, full-stack Retrieval-Augmented Generation (RAG) developer 
 - "Where are the API routes defined?"
 
 The app reads your files, chunks the content, embeds the chunks into FAISS, retrieves the most relevant context for each question, and sends that grounded context to an LLM for a structured developer-focused answer.
-
-## Screenshots
-
-![Upload UI](frontend/public/screenshots/upload.png)
-
-![Chat UI](frontend/public/screenshots/chat.png)
-
-![Results](frontend/public/screenshots/results.png)
-
+ 
 ## Tech Stack
 
 | Layer | Technology |
