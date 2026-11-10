@@ -3,9 +3,12 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import get_settings
+from pathlib import Path
+
+from app.config import BASE_DIR, get_settings
 from app.routes import query, upload
 from app.services.retriever import has_vector_store
+from fastapi.staticfiles import StaticFiles
 
 
 settings = get_settings()
@@ -14,10 +17,13 @@ logger = logging.getLogger("codemind")
 
 app = FastAPI(title=settings.app_name, version="1.0.0")
 
+origins = settings.parsed_cors_origins
+allow_all_origins = "*" in origins or not origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    allow_origins=["*"] if allow_all_origins else origins,
+    allow_credentials=not allow_all_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -36,3 +42,10 @@ async def health_check():
         "has_indexed_documents": has_vector_store(),
         "runtime_issues": runtime_issues,
     }
+
+
+# Optional: Serve built frontend SPA if dist/ is present
+frontend_dist = BASE_DIR.parent / "frontend" / "dist"
+if frontend_dist.exists() and (frontend_dist / "index.html").exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
+

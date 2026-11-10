@@ -199,13 +199,25 @@ Response:
 }
 ```
 
-## Docker
+## Deployment
+
+### Option 1: Docker Compose (Full Stack)
+
+Run both frontend and backend in isolated containers with a single command:
 
 ```bash
-cd backend
-docker build -t codemind-backend .
-docker run --env-file .env -p 8000:8000 codemind-backend
+docker compose up --build -d
 ```
+
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:8000`
+
+### Option 2: Cloud Deployment (Render + Vercel)
+
+- **Backend**: Deploy `backend/` to [Render](https://render.com) or [Railway](https://railway.app) with start command `uvicorn app.main:app --host 0.0.0.0 --port $PORT` and env `GOOGLE_API_KEY`.
+- **Frontend**: Deploy `frontend/` to [Vercel](https://vercel.com) or [Netlify](https://netlify.com) with build command `npm run build` and env `VITE_API_URL=https://your-backend.onrender.com`.
+
+For comprehensive instructions, see the complete [Deployment Guide](docs/deployment.md).
 
 ## Sample Prompts
 

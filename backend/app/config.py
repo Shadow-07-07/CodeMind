@@ -22,12 +22,18 @@ class Settings(BaseSettings):
     chunk_size: int = 1200
     chunk_overlap: int = 200
     retrieval_k: int = 5
-    cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    cors_origins: list[str] | str = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
     model_config = SettingsConfigDict(
         populate_by_name=True,
         extra="ignore",
     )
+
+    @property
+    def parsed_cors_origins(self) -> list[str]:
+        if isinstance(self.cors_origins, str):
+            return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        return self.cors_origins
 
     @property
     def google_genai_api_key(self) -> str:
