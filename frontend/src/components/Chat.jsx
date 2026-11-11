@@ -175,7 +175,9 @@ export default function Chat({
           role: "assistant",
           content:
             error.response?.data?.detail ||
-            "Unable to generate response. Please ensure a codebase is uploaded and your API key is configured.",
+            (error.message
+              ? `Connection error: ${error.message}. Please verify the Render backend is running and reachable.`
+              : "Unable to generate response. Please ensure a codebase is uploaded and your API key is configured."),
           sources: [],
           isError: true,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),

@@ -20,13 +20,24 @@ app = FastAPI(title=settings.app_name, version="1.0.0")
 origins = settings.parsed_cors_origins
 allow_all_origins = "*" in origins or not origins
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://code-mind-eosin.vercel.app"] if allow_all_origins else origins,
-    allow_credentials = True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if allow_all_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=r"^https?://.*",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
 
 app.include_router(upload.router)
 app.include_router(query.router)

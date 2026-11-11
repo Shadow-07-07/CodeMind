@@ -15,14 +15,14 @@ class Settings(BaseSettings):
     google_api_key: str = Field(default="", alias="GOOGLE_API_KEY")
     gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
     gemini_embedding_model: str = "gemini-embedding-001"
-    gemini_chat_model: str = "gemini-3.8-flash"
+    gemini_chat_model: str = "gemini-1.5-flash"
     vector_store_path: Path = BASE_DIR / "storage" / "faiss"
     upload_dir: Path = BASE_DIR / "storage" / "uploads"
     max_upload_size_mb: int = 50
     chunk_size: int = 1200
     chunk_overlap: int = 200
     retrieval_k: int = 5
-    cors_origins: list[str] | str = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    cors_origins: list[str] | str = ["*"]
 
     model_config = SettingsConfigDict(
         populate_by_name=True,

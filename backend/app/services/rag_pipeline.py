@@ -1,9 +1,12 @@
+import logging
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from app.config import get_settings
 from app.services.retriever import get_relevant_documents
+
+logger = logging.getLogger("codemind.rag")
 
 
 SYSTEM_PROMPT = """You are CodeMind, an elite AI developer assistant powered by Retrieval-Augmented Generation (RAG).
@@ -46,12 +49,17 @@ def format_history(history: list[dict] | None) -> str:
     if not history:
         return "None"
     lines = []
-    # Include up to the last 6 messages (3 conversation turns)
+    # Include up to the last 6 messages (3 conversation turns), filtering out empty or dummy payloads
     for msg in history[-6:]:
-        role = "User" if msg.get("role") == "user" else "Assistant"
+        if not isinstance(msg, dict):
+            continue
+        role_raw = msg.get("role", "")
         content = str(msg.get("content", "")).strip()
+        if not content:
+            continue
+        role = "User" if role_raw == "user" else "Assistant"
         lines.append(f"{role}: {content}")
-    return "\n".join(lines)
+    return "\n".join(lines) if lines else "None"
 
 
 def format_context(documents) -> str:
@@ -60,6 +68,16 @@ def format_context(documents) -> str:
         source = doc.metadata.get("source", "unknown")
         blocks.append(f"[{index}] Source: {source}\n{doc.page_content}")
     return "\n\n---\n\n".join(blocks)
+
+
+# Known stable production Gemini chat models with fallback cascade
+CANDIDATE_CHAT_MODELS = [
+    "gemini-1.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-pro",
+    "gemini-2.5-flash",
+    "gemini-1.5-flash-8b",
+]
 
 
 def answer_question(question: str, k: int | None = None, history: list[dict] | None = None) -> dict:
@@ -73,8 +91,8 @@ def answer_question(question: str, k: int | None = None, history: list[dict] | N
         raise RuntimeError("GOOGLE_API_KEY or GEMINI_API_KEY is not configured.")
 
     models_to_try = [settings.gemini_chat_model]
-    for fallback in ["gemini-3-flash-preview", "gemini-3.8-flash", "gemini-flash-latest"]:
-        if fallback not in models_to_try:
+    for fallback in CANDIDATE_CHAT_MODELS:
+        if fallback and fallback not in models_to_try:
             models_to_try.append(fallback)
 
     last_error = None
@@ -91,9 +109,11 @@ def answer_question(question: str, k: int | None = None, history: list[dict] | N
             chain = PROMPT | llm | StrOutputParser()
             answer = chain.invoke({"question": question, "context": context, "history": history_str})
             if answer:
+                logger.info("Successfully generated answer using model: %s", model_name)
                 break
         except Exception as exc:
             last_error = exc
+            logger.warning("Gemini chat model '%s' failed: %s; trying next fallback...", model_name, exc)
             continue
 
     if answer is None:

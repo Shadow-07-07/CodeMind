@@ -74,7 +74,12 @@ export default function Sidebar({
       onIndexed?.(result);
     } catch (error) {
       setStatus("error");
-      setMessage(error.response?.data?.detail || "Upload failed. Please check the file and try again.");
+      const errDetail =
+        error.response?.data?.detail ||
+        (error.message
+          ? `${error.message}. If deploying, verify backend URL and that Render instance is awake.`
+          : "Upload failed. Please check the file and try again.");
+      setMessage(errDetail);
     }
   }
 
