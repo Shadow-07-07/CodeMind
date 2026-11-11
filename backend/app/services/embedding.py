@@ -8,10 +8,9 @@ logger = logging.getLogger("codemind.embedding")
 
 FALLBACK_EMBEDDING_MODELS = [
     "gemini-embedding-001",
-    "models/text-embedding-004",
-    "text-embedding-004",
-    "models/embedding-001",
-    "embedding-001",
+    "gemini-embedding-2-preview",
+    "models/gemini-embedding-001",
+    "models/gemini-embedding-2-preview",
 ]
 
 

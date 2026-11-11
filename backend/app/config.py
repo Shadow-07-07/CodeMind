@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     google_api_key: str = Field(default="", alias="GOOGLE_API_KEY")
     gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
     gemini_embedding_model: str = "gemini-embedding-001"
-    gemini_chat_model: str = "gemini-1.5-flash"
+    gemini_chat_model: str = "gemini-3.8-flash"
     vector_store_path: Path = BASE_DIR / "storage" / "faiss"
     upload_dir: Path = BASE_DIR / "storage" / "uploads"
     max_upload_size_mb: int = 50

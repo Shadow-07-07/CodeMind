@@ -70,13 +70,13 @@ def format_context(documents) -> str:
     return "\n\n---\n\n".join(blocks)
 
 
-# Known stable production Gemini chat models with fallback cascade
+# Verified active production Gemini chat models with automatic fallback cascade
 CANDIDATE_CHAT_MODELS = [
-    "gemini-1.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-pro",
-    "gemini-2.5-flash",
-    "gemini-1.5-flash-8b",
+    "gemini-3.8-flash",
+    "gemini-flash-latest",
+    "gemini-3-flash-preview",
+    "gemini-3.5-flash",
+    "gemini-3.7-flash",
 ]
 
 

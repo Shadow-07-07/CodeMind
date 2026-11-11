@@ -71,7 +71,7 @@ export default function Navbar({
           {/* Model Pill */}
           <div className="hidden items-center gap-1.5 rounded-full border border-line bg-panel/60 px-3 py-1.5 text-xs text-slate-400 lg:flex">
             <Cpu className="h-3.5 w-3.5 text-brand-cyan" />
-            <span>Gemini 1.5 / 2.0 Flash</span>
+            <span>Gemini 3.8 Flash</span>
             <span className="text-slate-600">•</span>
             <Database className="h-3.5 w-3.5 text-brand-violet" />
             <span>FAISS Local</span>
