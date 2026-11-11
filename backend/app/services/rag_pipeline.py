@@ -1,4 +1,6 @@
+import json
 import logging
+import urllib.request
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -70,14 +72,28 @@ def format_context(documents) -> str:
     return "\n\n---\n\n".join(blocks)
 
 
-# Verified active production Gemini chat models with automatic fallback cascade
+# Verified active production Gemini chat models prioritized by response speed
 CANDIDATE_CHAT_MODELS = [
+    "gemini-3-flash-preview",
+    "gemini-3.1-flash-lite",
+    "gemini-3.5-flash",
     "gemini-3.8-flash",
     "gemini-flash-latest",
-    "gemini-3-flash-preview",
-    "gemini-3.5-flash",
-    "gemini-3.7-flash",
 ]
+
+
+def _call_gemini_rest(prompt: str, api_key: str, model_name: str) -> str:
+    clean_model = model_name.replace("models/", "")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent?key={api_key}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 2048},
+    }
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        res = json.loads(resp.read().decode())
+        return res["candidates"][0]["content"]["parts"][0]["text"]
 
 
 def answer_question(question: str, k: int | None = None, history: list[dict] | None = None) -> dict:
@@ -105,16 +121,32 @@ def answer_question(question: str, k: int | None = None, history: list[dict] | N
                 google_api_key=api_key,
                 temperature=0.2,
                 max_retries=1,
+                request_timeout=15,
             )
             chain = PROMPT | llm | StrOutputParser()
             answer = chain.invoke({"question": question, "context": context, "history": history_str})
             if answer:
-                logger.info("Successfully generated answer using model: %s", model_name)
+                logger.info("Successfully generated answer using LangChain with model: %s", model_name)
                 break
         except Exception as exc:
             last_error = exc
-            logger.warning("Gemini chat model '%s' failed: %s; trying next fallback...", model_name, exc)
-            continue
+            logger.warning("LangChain chat model '%s' failed (%s); trying direct REST for model...", model_name, exc)
+            # Fast direct REST fallback
+            try:
+                full_prompt = (
+                    f"{SYSTEM_PROMPT}\n\n"
+                    f"Recent Conversation History:\n{history_str}\n\n"
+                    f"Retrieved Codebase Context:\n{context}\n\n"
+                    f"Question:\n{question}"
+                )
+                answer = _call_gemini_rest(full_prompt, api_key, model_name)
+                if answer:
+                    logger.info("Successfully generated answer via direct REST with model: %s", model_name)
+                    break
+            except Exception as rest_exc:
+                last_error = rest_exc
+                logger.warning("Direct REST also failed for '%s': %s; trying next model...", model_name, rest_exc)
+                continue
 
     if answer is None:
         raise last_error or RuntimeError("Failed to generate answer from language model.")
